@@ -67,14 +67,34 @@ class DiscordHandler extends AbstractProcessingHandler
     protected function write(LogRecord $record): void
     {
         if ($this->config->isEmbedMode()) {
+            $embed = [
+                'title' => $record->level->getName(),
+                'description' => $this->splitMessage($record->message)[0],
+                'timestamp' => $record->datetime->format($this->config->getDatetimeFormat()),
+                'color' => $this->getColorForLevel($record->level),
+            ];
+            $fields = [];
+            if (trim($this->config->getName()) !== '') {
+                $fields[] = [
+                    'name' => 'Name',
+                    'value' => $this->config->getName(),
+                    'inline' => true,
+                ];
+            }
+            if (trim($this->config->getSubName()) !== '') {
+                $fields[] = [
+                    'name' => 'Subname',
+                    'value' => $this->config->getSubName(),
+                    'inline' => true,
+                ];
+            }
+            if (count($fields) > 0) {
+                $embed['fields'] = $fields;
+            }
+
             $parts = [[
                 'embeds' => [
-                    [
-                        'title' => $record->level->getName(),
-                        'description' => $this->splitMessage($record->message)[0],
-                        'timestamp' => $record->datetime->format($this->config->getDatetimeFormat()),
-                        'color' => $this->getColorForLevel($record->level),
-                    ]
+                    $embed,
                 ]
             ]];
         } else {
